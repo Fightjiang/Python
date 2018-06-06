@@ -1,0 +1,98 @@
+# -- coding:utf-8 --
+
+import requests
+import re
+from requests.exceptions import RequestException
+import bs4
+import xlwt
+
+# 获取网页请求数据
+
+def get_one_page(url):
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+        }
+        reponse = requests.get(url, headers=headers)
+        if reponse.status_code == 200:
+            return reponse.content
+        return None
+    except RequestException:
+        return None
+
+def parse_one_page(url):
+
+    myfile = xlwt.Workbook()
+    sheet = myfile.add_sheet("sheet1", cell_overwrite_ok=True)
+    sheet.write(0, 0, "骑士/勇士")
+    sheet.write(0, 1, "球员")
+    sheet.write(0, 2, '时间')
+    sheet.write(0, 3, '投篮命中率')
+    sheet.write(0, 4, '命中数')
+    sheet.write(0, 5, '出手数')
+    sheet.write(0, 6, '三分命中率')
+    sheet.write(0, 7, '三分命中数')
+    sheet.write(0, 8, '三分出手数')
+    sheet.write(0, 9, '罚球命中率')
+    sheet.write(0, 10,'罚球命中数')
+    sheet.write(0, 11, '罚球出手数')
+    sheet.write(0, 12, '篮板')
+    sheet.write(0, 13, '前场篮板')
+    sheet.write(0, 14, '后场篮板')
+    sheet.write(0, 15, '助攻')
+    sheet.write(0, 16, '抢断')
+    sheet.write(0, 17, '盖帽')
+    sheet.write(0, 18, '失误')
+    sheet.write(0, 19, '犯规')
+    sheet.write(0, 20, '得分')
+    html = get_one_page(url)
+    soup = bs4.BeautifulSoup(html, 'lxml')
+    score = soup.find_all('div',class_="score",limit=2)
+    a = score[0].text
+    b = score[1].text
+    c = str(a)+ "/" + str(b)
+    sheet.write(1,0,c)
+    links = soup.find_all('tr', class_="sort")　# 找到网页中所有的这样的标签，并返回一个列表
+    sum = 1
+    for link in links:
+        plays = link.find_all('a')
+        time = link.find_all('td',class_=re.compile(r'normal mp change_color col2 row\d'))
+        shoot = link.find_all('td',class_=re.compile(r'normal fgper change_color col3 row\d'))
+        ming = link.find_all('td', class_=re.compile(r'normal fg change_color col4 row\d'))
+        chu = link.find_all('td', class_=re.compile(r'normal fga change_color col5 row\d'))
+        three_core = link.find_all('td', class_=re.compile(r'normal threepper change_color col6 row\d'))
+        ming1 = link.find_all('td', class_=re.compile(r'normal threep change_color col7 row\d'))
+        chu1 = link.find_all('td', class_=re.compile(r'normal threepa change_color col8 row\d'))
+        penalty_shot = link.find_all('td', class_=re.compile(r'normal ftper change_color col9 row\d'))
+        ming2 = link.find_all('td', class_=re.compile(r'normal ft change_color col10 row\d'))
+        chu2 = link.find_all('td', class_=re.compile(r'normal fta change_color col11 row\d'))
+        backboard = link.find_all('td', class_=re.compile(r'normal trb change_color col13 row\d'))
+        field = link.find_all('td', class_=re.compile(r'normal orb change_color col14 row\d'))
+        back_court = link.find_all('td', class_=re.compile(r'normal drb change_color col15 row\d'))
+        attack = link.find_all('td', class_=re.compile(r'normal ast change_color col16 row\d'))
+        steal = link.find_all('td', class_=re.compile(r'normal stl change_color col17 row\d'))
+        block_shot = link.find_all('td', class_=re.compile(r'normal blk change_color col18 row\d'))
+        fault = link.find_all('td', class_=re.compile(r'normal tov change_color col19 row\d'))
+        foul = link.find_all('td', class_=re.compile(r'normal pf change_color col20 row\d'))
+        score = link.find_all('td', class_=re.compile(r'normal pts change_color col21 row\d'))
+        list = [plays,time, shoot, ming, chu, three_core, ming1, chu1, penalty_shot, ming2, chu2, backboard, field,back_court, attack, steal, block_shot, fault, foul, score]
+        for su in range(0, 20):　# 逐个的将目标从 list 中输出，并取出标签内容，一行一行的存入 excel 中
+            for ant in list[su]:
+                text = ant.text
+                if text == ' ':　 # 判断有空格的目标用０ 来代替
+                    text = '0'
+                if sum == 13:　# 将勇士队员与骑士队员分开一行
+                    sheet.write(sum, su + 1, '\n')
+                else:
+                    sheet.write(sum, su + 1, text)
+        sum = sum + 1
+
+    myfile.save("C:/Users/lec/Desktop/NBA.xls")
+
+# 主函数
+def main():
+    url = 'http://stat-nba.com/game/42429.html'
+    parse_one_page(url)
+
+if __name__ == '__main__':
+    main()
