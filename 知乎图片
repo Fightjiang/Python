@@ -1,0 +1,42 @@
+from selenium import webdriver
+import time
+import requests
+from bs4 import BeautifulSoup
+import html.parser
+
+def main():
+    driver = webdriver.Chrome() # 打开 Chrome 浏览器
+    driver.get("https://www.zhihu.com/question/28481779") # 打开指定的 URL
+    for i in range(3):# 向下滑动触发内容，3 代表的就是3 次,这里也可以写成一个函数的形式
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);") #滑动到浏览器底部，触发加载信息
+        time.sleep(3) #等待页面加载
+
+    source = driver.page_source  # 原网页 HTML 信息
+    soup = BeautifulSoup(source,'lxml') # 使用 BeautifulSoup 进行解析
+    data_in = soup.find_all('noscript') # 找到所有的 <noscript>
+    data_inner_all = ""
+    for data in data_in:
+        data_inner = data.get_text() # 获取 <noscript> 的内部内容
+        data_inner_all += data_inner + "\n"
+    data_all = html.parser.unescape(data_inner_all) # 将解码成 HTML ,类似于这样 data_all = '<abc>'
+
+
+    img_soup = BeautifulSoup(data_all,'lxml') # 再次解析 HTML
+    imgs = img_soup.find_all('img') # 找到所有的 img
+    count = 0  # 用来标记图片数量及作为名字
+    for img in imgs: # 保存图片所有的图片
+        if img.get('src') is not None: # 判断是否包含图片的 url
+            img_url = img.get('src')
+            with open('/Users/lec/Desktop/img/' + str(count) + '.jpg','wb+') as f: #保存图片到本地
+                f.write(requests.get(img_url).content)
+                count += 1
+    print("Intall images successfully!!!") # 保存成功！
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
