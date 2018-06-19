@@ -1,0 +1,22 @@
+#coding:utf-8
+from scipy.misc import imread
+import matplotlib.pyplot as plt
+import jieba
+from wordcloud import WordCloud,ImageColorGenerator
+
+text = open('/Users/lec/Desktop/moive.txt').read() # 这是的你的文字库
+seg_generator = jieba.cut(text) #  结巴分词，要了解详细的用法请直接百度
+text = r' '.join(seg_generator)
+back_coloring = imread('/Users/lec/Desktop/newbg.jpg') # 设置背景图片
+
+wc = WordCloud( font_path='C:\Windows\Fonts\msyhl.ttc',#设置字体，windows 下自带的字体库
+                background_color="black", # 背景颜色
+                max_words=2000,# 词云显示的最大词数
+                mask=back_coloring,# 设置背景图片
+                max_font_size=60, # 字体最大值
+                random_state=42, #　随机产生图片颜色时随机产生的颜色种类
+                )
+wc.generate(text)
+image_colors = ImageColorGenerator(back_coloring) # 从背景图片生成颜色值
+plt.imshow(wc.recolor(color_func=image_colors),interpolation="bilinear") # 这一个对词云重新着色，对应的是照片原色！
+wc.to_file('/Users/lec/Desktop/dee1.png') # 保存图片！
