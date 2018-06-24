@@ -1,0 +1,48 @@
+# -*- coding:utf-8 -*-
+from selenium import webdriver
+from bs4 import BeautifulSoup
+from scipy.misc import imread
+import matplotlib.pyplot as plt
+import jieba
+from wordcloud import WordCloud,ImageColorGenerator
+import time
+
+def ciyun(address):
+    text = open(address, encoding='utf-8').read()  # 这是的你的文字库
+    seg_generator = jieba.cut(text)  # 结巴分词，要了解详细的用法请直接百度
+    text = r' '.join(seg_generator)
+    back_coloring = imread('/Users/lec/Desktop/cup.png')  # 设置背景图片
+
+    wc = WordCloud(font_path='C:\Windows\Fonts\msyhl.ttc',  # 设置字体，windows 下自带的字体库
+                   background_color="black",  # 背景颜色
+                   max_words=2000,  # 词云显示的最大词数
+                   mask=back_coloring,  # 设置背景图片
+                   max_font_size=60,  # 字体最大值
+                   random_state=42,  # 随机产生图片颜色时随机产生的颜色种类
+                   )
+    wc.generate(text)
+    image_colors = ImageColorGenerator(back_coloring)  # 从背景图片生成颜色值
+    plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")  # 这一个对词云重新着色，对应的是照片原色！
+    wc.to_file('/Users/lec/Desktop/cup1.png')  # 保存图片！
+
+def main():
+    driver = webdriver.Chrome() # 打开 Chrome 浏览器
+    driver.get('https://www.zhibo8.cc/zuqiu/2018/0622-agenting-jijin.htm') # 进入这个网址
+    def click(times):
+        for i in range(times):
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 滑动到浏览器底部
+            button = driver.find_element_by_xpath(".//*[@id='pl_box']/div/div[4]/div/div[7]")  # 模拟人工点击加载更多的评论
+            button.click() # 点击操作
+            time.sleep(5) # 等待评论加载，不要以为这个是多余的，你可以去掉试试的勒！
+    click(2) # 点击加载更多评论次数
+    result_raw = driver.page_source # 获取网页的源代码。
+    result_soup = BeautifulSoup(result_raw, 'html.parser') # 使用 Beautiful 进行网页解析
+    comments_won = result_soup.find_all("div",class_="case") # 获取精彩评论
+    comments = result_soup.find_all("p",class_="word") # 获取普通评论
+    address = '/Users/lec/Desktop/456.txt'
+    with open(address, 'w',encoding=('utf-8')) as f: # 将评论保存在本地文件中
+    for comment in comments:
+        f.write('{}+\n'.format(comment.get_text()))
+    ciyun(address) # 生成词云
+if __name__ =='__main__':
+    main()
