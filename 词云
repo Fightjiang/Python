@@ -4,10 +4,18 @@ import matplotlib.pyplot as plt
 import jieba
 from wordcloud import WordCloud,ImageColorGenerator
 
-text = open('/Users/lec/Desktop/moive.txt').read() # 这是的你的文字库
-seg_generator = jieba.cut(text) #  结巴分词，要了解详细的用法请直接百度
-text = r' '.join(seg_generator)
-back_coloring = imread('/Users/lec/Desktop/newbg.jpg') # 设置背景图片
+def processchinese(text):
+    seg_generator = jieba.cut(text)  # 结巴分词，要了解详细的用法请直接百度
+    #stopwords = {}.fromkeys(['图片', '表情',  '不是', '可以', '那个', '刚刚', '就是', '还是', '然后', '还有', '怎么' , '知道', '不会' , '没有', '可是'])  #跳过关键词
+    stopwords = ['真的']
+    seg_list = [i for i in seg_generator if i not in stopwords]
+    seg_list = r' '.join(seg_list)
+    return seg_list
+
+
+text = open('/Users/lec/Desktop/love.txt').read() # 这是的你的文字库
+text = processchinese(text)
+back_coloring = imread('/Users/lec/Desktop/timg.jpg') # 设置背景图片
 
 wc = WordCloud( font_path='C:\Windows\Fonts\msyhl.ttc',#设置字体，windows 下自带的字体库
                 background_color="black", # 背景颜色
@@ -17,6 +25,7 @@ wc = WordCloud( font_path='C:\Windows\Fonts\msyhl.ttc',#设置字体，windows �
                 random_state=42, #　随机产生图片颜色时随机产生的颜色种类
                 )
 wc.generate(text)
+#plt.imshow(wc) # 原色
 image_colors = ImageColorGenerator(back_coloring) # 从背景图片生成颜色值
 plt.imshow(wc.recolor(color_func=image_colors),interpolation="bilinear") # 这一个对词云重新着色，对应的是照片原色！
 wc.to_file('/Users/lec/Desktop/dee1.png') # 保存图片！
