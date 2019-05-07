@@ -4,7 +4,7 @@ import io
 import werobot
 import random
 import linecache
-robot = werobot.WeRoBot(token='y11g')
+robot = werobot.WeRoBot(token='xxxx')
 
 @robot.handler
 def articles(message):
